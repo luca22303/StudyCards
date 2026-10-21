@@ -3,7 +3,7 @@
 
 import * as store from './store.js';
 import { db } from './store.js';
-import { sync, requestSync, onStatus, repoConfig, getStatus } from './sync.js';
+import { sync, requestSync, onStatus, repoConfig, getStatus, detectedBranch, resetDetectedBranch } from './sync.js';
 import { renderMarkdown } from './render.js';
 import { importImage } from './images.js';
 import { schedule, previewIntervals, formatInterval, stats, introducedOn, RATINGS } from './lib/srs.js';
@@ -597,7 +597,7 @@ function renderSettings() {
       db.meta.headSha = null;
       db.meta.treeSha = null;
       db.meta.remoteShas = {};
-      db.meta.branch = null;
+      resetDetectedBranch();
       await store.saveMeta();
     }
     await store.saveSettings(patch);
@@ -612,7 +612,7 @@ function renderSettings() {
       ' that has access to this one repository only, with Contents set to Read and write. Paste it once on each device. It is kept on this device only.'),
     field('Owner', 'owner', { placeholder: auto.owner || 'your GitHub username', autocapitalize: 'off', autocomplete: 'off' }),
     field('Repository', 'repo', { placeholder: auto.repo || 'StudyCards', autocapitalize: 'off', autocomplete: 'off' }),
-    field('Branch', 'branch', { placeholder: db.meta.branch || 'default branch', autocapitalize: 'off', autocomplete: 'off' }, 'Leave empty to use the repository’s default branch.'),
+    field('Branch', 'branch', { placeholder: detectedBranch() || 'default branch', autocapitalize: 'off', autocomplete: 'off' }, 'Leave empty to use the repository’s default branch.'),
     field('Token', 'token', { type: 'password', placeholder: 'github_pat_…', autocomplete: 'off' }),
     statusEl,
     h('h2', {}, 'Study'),

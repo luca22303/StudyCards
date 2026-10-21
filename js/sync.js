@@ -42,6 +42,19 @@ export function repoConfig() {
   return { owner, repo, branch, token };
 }
 
+// The repo's default branch, looked up once per page load. Deliberately not
+// persisted: a saved copy outlived a default-branch switch on GitHub and kept
+// a device syncing to the old branch.
+let defaultBranch = null;
+
+export function detectedBranch() {
+  return defaultBranch;
+}
+
+export function resetDetectedBranch() {
+  defaultBranch = null;
+}
+
 let running = null;
 let again = false;
 let timer = null;
@@ -83,7 +96,7 @@ async function syncOnce() {
   setStatus('syncing', 'Syncing…');
   try {
     const gh = client(cfg);
-    const branch = cfg.branch || db.meta.branch || (db.meta.branch = (await gh.repoInfo()).default_branch);
+    const branch = cfg.branch || defaultBranch || (defaultBranch = (await gh.repoInfo()).default_branch);
     for (let attempt = 1; ; attempt++) {
       try {
         const remote = await pull(gh, branch);

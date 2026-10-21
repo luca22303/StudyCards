@@ -1,0 +1,11 @@
+{
+  "name": "studycards",
+  "private": true,
+  "type": "module",
+  "description": "Personal flashcards with spaced repetition, synced through GitHub.",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "test": "node --test tests/*.test.mjs",
+    "test:e2e": "node tests/e2e.mjs"
+  }
+}

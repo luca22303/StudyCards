@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>StudyCards</title>
+  <meta name="description" content="Personal flashcards with spaced repetition, synced through GitHub.">
+  <meta name="theme-color" content="#f6f5f2" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#17181a" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="StudyCards">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#/">StudyCards</a>
+    <div class="row">
+      <button id="sync-btn" class="btn small sync" data-state="idle" type="button"><span class="dot" aria-hidden="true"></span><span class="label">Sync</span></button>
+      <a class="btn icon" href="#/settings" aria-label="Settings">⚙︎</a>
+    </div>
+  </header>
+  <main id="main"></main>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

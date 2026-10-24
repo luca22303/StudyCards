@@ -1,12 +1,12 @@
 {
  "1q1sl84ybsn8x2": {
   "due": "2026-10-25",
-  "ease": 2.1,
+  "ease": 1.95,
   "interval": 1,
   "introduced": "2026-10-24",
   "lapses": 0,
-  "reps": 0,
-  "updatedAt": 1792841563273
+  "reps": 1,
+  "updatedAt": 1792841572353
  },
  "2i1u6w2u3e4r13": {
   "due": "2026-10-25",
@@ -46,12 +46,12 @@
  },
  "9s516kh66zh9i2": {
   "due": "2026-10-25",
-  "ease": 2.1,
+  "ease": 1.95,
   "interval": 1,
   "introduced": "2026-10-24",
   "lapses": 0,
-  "reps": 0,
-  "updatedAt": 1792841529243
+  "reps": 1,
+  "updatedAt": 1792841568153
  },
  "cw75dwfyxyj13m": {
   "due": "2026-10-25",

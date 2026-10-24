@@ -7,5 +7,14 @@
   "lapses": 0,
   "reps": 1,
   "updatedAt": 1792839653894
+ },
+ "zzkvgaj9g86mq4": {
+  "due": "2026-10-25",
+  "ease": 2.5,
+  "interval": 1,
+  "introduced": "2026-10-24",
+  "lapses": 0,
+  "reps": 1,
+  "updatedAt": 1792841307676
  }
 }

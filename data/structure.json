@@ -2,20 +2,78 @@
  "classes": {
   "2b400g2w200473": {
    "createdAt": 1792838612456,
+   "deleted": true,
    "id": "2b400g2w200473",
    "name": "Zivilrecht",
    "order": 1,
-   "updatedAt": 1792838612456
+   "updatedAt": 1792839188970
+  },
+  "2h5s3e1p3b125x": {
+   "createdAt": 1792839633929,
+   "id": "2h5s3e1p3b125x",
+   "name": "Zivilrecht",
+   "order": 1,
+   "updatedAt": 1792839633929
+  },
+  "4p6n2p6e6y6u42": {
+   "createdAt": 1792840051522,
+   "id": "4p6n2p6e6y6u42",
+   "name": "Spanish",
+   "order": 2,
+   "updatedAt": 1792840051522
+  },
+  "5s644o0d1s6o1g": {
+   "createdAt": 1792624066590,
+   "deleted": true,
+   "id": "5s644o0d1s6o1g",
+   "name": "Zivil u Gesellschaftsrecht",
+   "order": 1,
+   "updatedAt": 1792838903666
+  },
+  "6p5x1p6k3q041v": {
+   "createdAt": 1792624104453,
+   "deleted": true,
+   "id": "6p5x1p6k3q041v",
+   "name": "Öff Recht",
+   "order": 2,
+   "updatedAt": 1792839191750
   }
  },
  "lectures": {
+  "1l3x3l5f2v3l2u": {
+   "classId": "2h5s3e1p3b125x",
+   "createdAt": 1792839637466,
+   "id": "1l3x3l5f2v3l2u",
+   "name": "Zivilrecht",
+   "order": 1,
+   "updatedAt": 1792839637466
+  },
+  "1w3f6t52053g3u": {
+   "classId": "5s644o0d1s6o1g",
+   "createdAt": 1792624081223,
+   "deleted": true,
+   "id": "1w3f6t52053g3u",
+   "name": "Zivil",
+   "order": 1,
+   "updatedAt": 1792838903666
+  },
   "542v5k103h1y33": {
    "classId": "2b400g2w200473",
    "createdAt": 1792838625050,
+   "deleted": true,
    "id": "542v5k103h1y33",
    "name": "Zivilrecht",
    "order": 1,
-   "updatedAt": 1792838651714
+   "updatedAt": 1792839188970
+  },
+  "6m16302w3j4442": {
+   "classId": "6p5x1p6k3q041v",
+   "createdAt": 1792624108839,
+   "deleted": true,
+   "id": "6m16302w3j4442",
+   "name": "1",
+   "order": 1,
+   "updatedAt": 1792839191750
   }
  }
 }

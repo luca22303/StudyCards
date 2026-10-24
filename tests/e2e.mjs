@@ -378,7 +378,28 @@ try {
   await waitSynced(A);
   check('offline edit pushed once back online', Object.values(jsonAt(`data/cards/${lectureId}.json`)).some(c => c.front === 'offline q'));
 
-  for (const d of [mac, phone]) {
+  // 12. BUG: a device without a token (read-only) pulled new data but never
+  // redrew, because the screen only refreshed when a sync ended as "synced"
+  // and read-only syncs end as "local". Found on a real Mac that kept showing
+  // its old list while the phone showed the PC's new class.
+  const ro = await device('readonly', { viewport: { width: 1280, height: 800 } });
+  const { page: R } = ro;
+  await R.goto(`${BASE}#/settings`);
+  await R.fill('input[data-key=owner]', 'me');
+  await R.fill('input[data-key=repo]', 'cards');
+  await R.click('button[type=submit]');
+  await R.evaluate(async () => (await import('./js/store.js')).addClass('Readonly local class'));
+  await R.goto(BASE);
+  await R.waitForFunction(() => /token/i.test(document.getElementById('sync-btn').title));
+  await A.goto(BASE);
+  await A.evaluate(async () => (await import('./js/store.js')).addClass('Pushed later'));
+  await syncNow(A);
+  await R.evaluate(async () => (await import('./js/sync.js')).sync());
+  const redrawn = await R.waitForSelector('h2:has-text("Pushed later")', { timeout: 3000 }).then(() => true, () => false);
+  check('read-only device redraws after pulling new data (no reload)', redrawn);
+  check('read-only device keeps its own local class', await R.isVisible('h2:has-text("Readonly local class")'));
+
+  for (const d of [mac, phone, ro]) {
     const errs = d.errors.filter(e => !/Failed to load resource|ERR_INTERNET_DISCONNECTED/.test(e));
     check(`${d.name}: no console errors`, errs.length === 0, errs.join(' | '));
   }

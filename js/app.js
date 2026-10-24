@@ -657,10 +657,12 @@ async function boot() {
     if (document.visibilityState === 'visible' && Date.now() - (db.meta.lastSync ?? 0) > 60_000) sync();
   });
   // A sync that pulled new data from the other device re-renders list
-  // screens (never a running study session).
+  // screens (never a running study session). Any finished state counts, not
+  // just "synced": a device without a token ends every sync as "local", and
+  // checking for "synced" left it showing a stale list after a real pull.
   let seenHead = db.meta.headSha;
   onStatus(st => {
-    if (st.state === 'synced' && db.meta.headSha !== seenHead) {
+    if (st.state !== 'syncing' && db.meta.headSha !== seenHead) {
       seenHead = db.meta.headSha;
       refreshIfPassive();
     }

@@ -1,0 +1,21 @@
+{
+ "classes": {
+  "2b400g2w200473": {
+   "createdAt": 1792838612456,
+   "id": "2b400g2w200473",
+   "name": "Zivilrecht",
+   "order": 1,
+   "updatedAt": 1792838612456
+  }
+ },
+ "lectures": {
+  "542v5k103h1y33": {
+   "classId": "2b400g2w200473",
+   "createdAt": 1792838625050,
+   "id": "542v5k103h1y33",
+   "name": "Zivilrecht",
+   "order": 1,
+   "updatedAt": 1792838651714
+  }
+ }
+}

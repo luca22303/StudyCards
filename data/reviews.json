@@ -35,6 +35,24 @@
   "reps": 0,
   "updatedAt": 1792841325981
  },
+ "cw75dwfyxyj13m": {
+  "due": "2026-10-25",
+  "ease": 2.3,
+  "interval": 1,
+  "introduced": "2026-10-24",
+  "lapses": 0,
+  "reps": 0,
+  "updatedAt": 1792841345896
+ },
+ "mcqxnyi1azcns0": {
+  "due": "2026-10-28",
+  "ease": 2.65,
+  "interval": 4,
+  "introduced": "2026-10-24",
+  "lapses": 0,
+  "reps": 1,
+  "updatedAt": 1792841342228
+ },
  "oecz31c8jj47od": {
   "due": "2026-10-25",
   "ease": 2.5,
@@ -43,6 +61,15 @@
   "lapses": 0,
   "reps": 1,
   "updatedAt": 1792841332529
+ },
+ "qw2vvbvrqc1szq": {
+  "due": "2026-10-25",
+  "ease": 2.5,
+  "interval": 1,
+  "introduced": "2026-10-24",
+  "lapses": 0,
+  "reps": 1,
+  "updatedAt": 1792841340243
  },
  "zzkvgaj9g86mq4": {
   "due": "2026-10-25",

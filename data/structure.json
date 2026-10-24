@@ -8,6 +8,13 @@
    "order": 1,
    "updatedAt": 1792839188970
   },
+  "2h5s3e1p3b125x": {
+   "createdAt": 1792839633929,
+   "id": "2h5s3e1p3b125x",
+   "name": "Zivilrecht",
+   "order": 1,
+   "updatedAt": 1792839633929
+  },
   "5s644o0d1s6o1g": {
    "createdAt": 1792624066590,
    "deleted": true,
@@ -26,6 +33,14 @@
   }
  },
  "lectures": {
+  "1l3x3l5f2v3l2u": {
+   "classId": "2h5s3e1p3b125x",
+   "createdAt": 1792839637466,
+   "id": "1l3x3l5f2v3l2u",
+   "name": "Zivilrecht",
+   "order": 1,
+   "updatedAt": 1792839637466
+  },
   "1w3f6t52053g3u": {
    "classId": "5s644o0d1s6o1g",
    "createdAt": 1792624081223,

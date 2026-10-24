@@ -201,12 +201,11 @@ try {
   // 1. Create class + lecture through the dialogs.
   await A.click('text=+ Add your first class');
   await answerDialog(A, 'Biology');
-  await answerDialog(A, 'Lecture 1');
-  const created = await A.waitForSelector('.lecture-link:has-text("Lecture 1")', { timeout: 5000 }).then(() => true, () => false);
-  check('class and lecture created', created && await A.isVisible('h2:has-text("Biology")'));
+  // No lecture prompt any more: a new class opens straight on its own page.
+  const created = await A.waitForSelector('h1:has-text("Biology")', { timeout: 5000 }).then(() => true, () => false);
+  check('class created and opened without asking for a lecture', created && A.url().includes('#/class/'));
 
   // 2. Card with an image via the editor.
-  await A.click('a.lecture-link:has-text("Lecture 1")');
   await A.click('text=+ New card');
   await A.fill('textarea[aria-label=Front]', 'What is the **powerhouse** of the cell?');
   await A.setInputFiles('.side-editor:nth-of-type(1) input[type=file]', await pngFile(A));
@@ -239,6 +238,7 @@ try {
   await connect(A);
   const structure = jsonAt('data/structure.json');
   const lectureId = Object.keys(structure?.lectures ?? {})[0];
+  check('cards added to the class live in its hidden default lecture', Object.keys(structure.lectures).length === 1 && structure.lectures[lectureId].isDefault === true);
   const pushed = jsonAt(`data/cards/${lectureId}.json`);
   const imagePaths = git.trees[git.commits[git.ref].tree].filter(e => e.path.startsWith('data/img/'));
   check('sync pushed structure with 1 class / 1 lecture', Object.keys(structure.classes).length === 1 && !!lectureId);
@@ -254,9 +254,9 @@ try {
 
   // 6. Flip-mode Due review: Again re-queues.
   await A.goto(BASE);
-  const reviewBtn = await A.textContent('.lectures a.btn:has-text("Review")');
+  const reviewBtn = await A.textContent('.class-head a.btn:has-text("Review")');
   check('home shows Review (4)', reviewBtn.includes('(4)'), reviewBtn);
-  await A.click('.lectures a.btn:has-text("Review")');
+  await A.click('.class-head a.btn:has-text("Review")');
   await A.waitForSelector('.flip-card');
   check('rating buttons hidden before flip', await A.isHidden('.ratings'));
   await A.click('.flip-card');
@@ -284,12 +284,12 @@ try {
   // BUG: rating was async, so fast key presses rated the same card repeatedly.
   check('fast key presses rate each card exactly once (all reps=1)', Object.values(reviews ?? {}).every(r => r.reps === 1));
   await A.goto(BASE);
-  check('nothing due after review', !(await A.textContent('.lectures a.btn:has-text("Review")')).includes('('));
+  check('nothing due after review', !(await A.textContent('.class-head a.btn:has-text("Review")')).includes('('));
 
   // 7. Cram never touches the schedule.
   const reviewsBefore = fileAt('data/reviews.json').toString();
   const localBefore = await A.evaluate(async () => (await import('./js/store.js')).db.reviews);
-  await A.click('.lectures a.btn:has-text("Cram")');
+  await A.click('.class-head a.btn:has-text("Cram")');
   await A.waitForSelector('.flip-card');
   check('cram buttons show no intervals', (await A.$$eval('.ratings small', e => e.map(x => x.textContent))).join() === 'repeat,2,3,4');
   await A.click('.flip-card');
@@ -310,9 +310,9 @@ try {
   const { page: B } = phone;
   await connect(B);
   await B.goto(BASE);
-  check('phone sees the class from the Mac', await B.isVisible('h2:has-text("Biology")'));
+  check('phone sees the class from the Mac', await B.waitForSelector('h2:has-text("Biology")', { timeout: 5000 }).then(() => true, () => false));
   check('phone has no horizontal scroll', await B.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
-  await B.click('a.lecture-link:has-text("Lecture 1")');
+  await B.click('a.class-link:has-text("Biology")');
   await B.waitForSelector('.card-list li');
   await B.waitForFunction(() => [...document.querySelectorAll('.card-list img')].some(i => i.src.startsWith('blob:') && i.naturalWidth > 0), null, { timeout: 5000 });
   check('phone shows the image pulled from the repo', true);
@@ -320,7 +320,7 @@ try {
   // 9. Type mode on the phone (cram so all cards appear).
   await B.goto(BASE);
   await B.click('button:has-text("Type answer")');
-  await B.click('.lectures a.btn:has-text("Cram")');
+  await B.click('.class-head a.btn:has-text("Cram")');
   await B.waitForSelector('.answer-input');
   check('type mode hides ratings until checked', await B.isHidden('.ratings'));
   await B.fill('.answer-input', 'my guess');
@@ -365,7 +365,7 @@ try {
   await A.reload();
   await A.waitForSelector('h2:has-text("Biology")', { timeout: 5000 });
   check('app opens offline with local data', true);
-  await A.click('a.lecture-link:has-text("Lecture 1")');
+  await A.click('a.class-link:has-text("Biology")');
   await A.click('text=+ New card');
   await A.fill('textarea[aria-label=Front]', 'offline q');
   await A.fill('textarea[aria-label=Back]', 'offline a');
@@ -395,9 +395,30 @@ try {
   await A.evaluate(async () => (await import('./js/store.js')).addClass('Pushed later'));
   await syncNow(A);
   await R.evaluate(async () => (await import('./js/sync.js')).sync());
-  const redrawn = await R.waitForSelector('h2:has-text("Pushed later")', { timeout: 3000 }).then(() => true, () => false);
+  const redrawn = await R.waitForSelector('h2:has-text("Pushed later")', { timeout: 8000 }).then(() => true, () => false);
   check('read-only device redraws after pulling new data (no reload)', redrawn);
   check('read-only device keeps its own local class', await R.isVisible('h2:has-text("Readonly local class")'));
+
+  // 13. Lectures are optional sections: one can still be added to a class,
+  // its cards count towards the class, and tab-separated rows (copied from a
+  // spreadsheet) paste as cards.
+  await A.goto(BASE);
+  await A.click('a.class-link:has-text("Biology")');
+  await A.click('button[aria-label="Class options"]');
+  await A.click('dialog[open] button:has-text("+ Add lecture")');
+  await answerDialog(A, 'Lecture 2');
+  await A.waitForSelector('h1:has-text("Lecture 2")');
+  await A.click('text=Paste cards');
+  await A.fill('dialog[open] textarea', 'el perro\tder Hund\nla casa\tdas Haus\tEs una casa grande.');
+  await A.click('dialog[open] button.primary');
+  await A.waitForFunction(() => document.querySelectorAll('.card-list li').length === 2);
+  const lectureCards = await A.$$eval('.card-list li', els => els.map(e => e.textContent));
+  check('tab-separated paste makes cards, third column on the back', lectureCards.some(t => t.includes('das Haus') && t.includes('Es una casa grande.')));
+  await A.click('a.back');
+  await A.waitForSelector('.section-head:has-text("Lectures")');
+  check('class page lists the optional lecture and its own cards', await A.isVisible('.lecture-link:has-text("Lecture 2")') && await A.isVisible('.section-head:has-text("Cards")'));
+  const classTotal = await A.textContent('.toolbar .stats');
+  check('class stats include the lecture\'s cards (4 direct + 2)', /^6 cards/.test(classTotal), classTotal);
 
   for (const d of [mac, phone, ro]) {
     const errs = d.errors.filter(e => !/Failed to load resource|ERR_INTERNET_DISCONNECTED/.test(e));

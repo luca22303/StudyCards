@@ -19,6 +19,7 @@ const RATING_LABELS = { again: 'Again', hard: 'Hard', good: 'Good', easy: 'Easy'
 
 const routes = [
   [/^#?\/?$/, renderHome],
+  [/^#\/class\/([\w-]+)$/, renderClass],
   [/^#\/lecture\/([\w-]+)$/, renderLecture],
   [/^#\/edit\/([\w-]+)(?:\/([\w-]+))?$/, renderEditor],
   [/^#\/study\/(review|cram)\/(class|lecture)\/([\w-]+)$/, renderStudy],
@@ -54,7 +55,7 @@ function go(hash) {
 // running session is never reset mid-card.
 function refreshIfPassive() {
   const hash = location.hash || '#/';
-  if (hash === '#/' || hash === '' || hash.startsWith('#/lecture/')) route();
+  if (hash === '#/' || hash === '' || hash.startsWith('#/class/') || hash.startsWith('#/lecture/')) route();
 }
 
 // ---- header ------------------------------------------------------------
@@ -129,7 +130,7 @@ function renderHome() {
   );
   if (!list.length) {
     main.append(h('div', { class: 'empty' },
-      h('p', {}, 'No classes yet. A class holds lectures, and each lecture holds cards.'),
+      h('p', {}, 'No classes yet. A class holds your cards; you can split it into lectures if you like.'),
       h('button', { class: 'btn primary', onclick: addClass }, '+ Add your first class')));
     return;
   }
@@ -139,21 +140,12 @@ function renderHome() {
     main.append(h('section', { class: 'class-block' },
       h('div', { class: 'class-head' },
         h('div', {},
-          h('h2', {}, c.name),
+          h('h2', {}, h('a', { class: 'class-link', href: `#/class/${c.id}` }, c.name)),
           statLine(allCards)),
         h('div', { class: 'row' },
           studyButtons('class', c.id, allCards),
           h('button', { class: 'btn icon', 'aria-label': `Options for ${c.name}`, onclick: () => classMenu(c) }, '⋯'))),
-      h('ul', { class: 'lectures' },
-        lectures.map(l => {
-          const cards = store.cardsOf(l.id);
-          return h('li', {},
-            h('a', { class: 'lecture-link', href: `#/lecture/${l.id}` },
-              h('span', { class: 'name' }, l.name),
-              statLine(cards)),
-            studyButtons('lecture', l.id, cards));
-        }),
-        h('li', { class: 'add' }, h('button', { class: 'btn ghost small', onclick: () => addLecture(c.id) }, '+ Lecture')))));
+      lectures.length ? lectureList(lectures) : null));
   }
   main.append(h('div', { class: 'row center' }, h('button', { class: 'btn', onclick: addClass }, '+ Class')));
 }
@@ -162,9 +154,7 @@ async function addClass() {
   const name = await askText('New class', { placeholder: 'e.g. Biology', ok: 'Add' });
   if (!name) return;
   const id = await store.addClass(name);
-  const lecture = await askText(`First lecture in ${name}`, { placeholder: 'e.g. Lecture 1', ok: 'Add' });
-  if (lecture) await store.addLecture(id, lecture);
-  route();
+  go(`#/class/${id}`);
 }
 
 async function addLecture(classId) {
@@ -192,11 +182,77 @@ async function classMenu(c) {
   if (key === 'up' || key === 'down') await store.move('class', c.id, key === 'up' ? -1 : 1);
   if (key === 'delete') {
     const n = store.cardsOfClass(c.id).length;
-    if (await confirmDialog(`Delete “${c.name}”?`, `This deletes ${store.lecturesOf(c.id).length} lecture(s) and ${n} card(s), on all your devices.`)) {
+    if (await confirmDialog(`Delete “${c.name}”?`, `This deletes ${n} card(s)${store.lecturesOf(c.id).length ? ` in ${store.lecturesOf(c.id).length} lecture(s)` : ''}, on all your devices.`)) {
       await store.deleteClass(c.id);
+      return go('#/');
     }
   }
   route();
+}
+
+function lectureList(lectures) {
+  return h('ul', { class: 'lectures' }, lectures.map(l => {
+    const cards = store.cardsOf(l.id);
+    return h('li', {},
+      h('a', { class: 'lecture-link', href: `#/lecture/${l.id}` },
+        h('span', { class: 'name' }, l.name),
+        statLine(cards)),
+      studyButtons('lecture', l.id, cards));
+  }));
+}
+
+// ---- class -------------------------------------------------------------
+
+// A class is the main place for cards. Lectures are optional sections; cards
+// added here go into the class's hidden default lecture (see store.js).
+function renderClass(classId) {
+  const cls = store.getClass(classId);
+  if (!cls) return go('#/');
+  document.title = `${cls.name} – StudyCards`;
+  const all = store.cardsOfClass(classId);
+  const direct = store.directCardsOf(classId);
+  const lectures = store.lecturesOf(classId);
+  const toDefault = fn => async () => fn(await store.ensureDefaultLecture(classId));
+
+  main.append(
+    h('a', { class: 'back', href: '#/' }, '‹ Classes'),
+    h('div', { class: 'toolbar' },
+      h('div', {}, h('h1', {}, cls.name), statLine(all)),
+      h('button', { class: 'btn icon', 'aria-label': 'Class options', onclick: () => classMenu(cls) }, '⋯')),
+    h('div', { class: 'row wrap' },
+      h('button', { class: 'btn primary', onclick: toDefault(id => go(`#/edit/${id}`)) }, '+ New card'),
+      h('button', { class: 'btn', onclick: toDefault(id => bulkDialog(id)) }, 'Paste cards'),
+      studyButtons('class', classId, all)),
+  );
+
+  if (lectures.length) {
+    main.append(
+      h('div', { class: 'section-head' }, h('h2', {}, 'Lectures'),
+        h('button', { class: 'btn ghost small', onclick: () => addLecture(classId) }, '+ Lecture')),
+      h('section', { class: 'class-block' }, lectureList(lectures)));
+  }
+  if (lectures.length && direct.length) main.append(h('div', { class: 'section-head' }, h('h2', {}, 'Cards')));
+  if (direct.length) main.append(cardList(direct));
+  else if (!lectures.length) {
+    main.append(h('div', { class: 'empty' },
+      h('p', {}, 'No cards yet. Add them one by one, or paste a list.'),
+      h('button', { class: 'btn ghost small', onclick: () => addLecture(classId) }, 'or split this class into lectures')));
+  }
+}
+
+function cardList(cards) {
+  const today = localDay();
+  return h('ul', { class: 'card-list' }, cards.map(c => {
+    const st = db.reviews[c.id];
+    const front = h('div', { class: 'md preview' });
+    const back = h('div', { class: 'md preview muted' });
+    renderMarkdown(front, c.front);
+    renderMarkdown(back, c.back);
+    const badge = !st ? 'new' : st.due <= today ? 'due' : `in ${formatInterval(daysBetween(today, st.due))}`;
+    return h('li', {},
+      h('a', { href: `#/edit/${c.lectureId}/${c.id}` }, front, back,
+        h('span', { class: `badge ${!st ? 'new' : st.due <= today ? 'due' : ''}` }, badge)));
+  }));
 }
 
 // ---- lecture -----------------------------------------------------------
@@ -209,7 +265,7 @@ function renderLecture(lectureId) {
   const cards = store.cardsOf(lectureId);
 
   main.append(
-    h('a', { class: 'back', href: '#/' }, `‹ ${cls?.name ?? 'Home'}`),
+    h('a', { class: 'back', href: cls ? `#/class/${cls.id}` : '#/' }, `‹ ${cls?.name ?? 'Home'}`),
     h('div', { class: 'toolbar' },
       h('div', {}, h('h1', {}, lecture.name), statLine(cards)),
       h('button', { class: 'btn icon', 'aria-label': 'Lecture options', onclick: () => lectureMenu(lecture) }, '⋯')),
@@ -223,18 +279,7 @@ function renderLecture(lectureId) {
     main.append(h('div', { class: 'empty' }, h('p', {}, 'No cards in this lecture yet.')));
     return;
   }
-  const today = localDay();
-  main.append(h('ul', { class: 'card-list' }, cards.map(c => {
-    const st = db.reviews[c.id];
-    const front = h('div', { class: 'md preview' });
-    const back = h('div', { class: 'md preview muted' });
-    renderMarkdown(front, c.front);
-    renderMarkdown(back, c.back);
-    const badge = !st ? 'new' : st.due <= today ? 'due' : `in ${formatInterval(daysBetween(today, st.due))}`;
-    return h('li', {},
-      h('a', { href: `#/edit/${lectureId}/${c.id}` }, front, back,
-        h('span', { class: `badge ${!st ? 'new' : st.due <= today ? 'due' : ''}` }, badge)));
-  })));
+  main.append(cardList(cards));
 }
 
 function daysBetween(a, b) {
@@ -259,7 +304,7 @@ async function lectureMenu(l) {
     const n = store.cardsOf(l.id).length;
     if (await confirmDialog(`Delete “${l.name}”?`, `This deletes ${n} card(s), on all your devices.`)) {
       await store.deleteLecture(l.id);
-      return go('#/');
+      return go(`#/class/${l.classId}`);
     }
   }
   route();
@@ -294,7 +339,7 @@ function bulkDialog(lectureId) {
     }
     return h('div', { class: 'bulk' },
       h('h2', {}, 'Paste cards'),
-      h('p', { class: 'muted' }, 'One card per line: front ', h('code', {}, SEPARATOR), ' back. Write ', h('code', {}, '\\n'), ' for a line break.'),
+      h('p', { class: 'muted' }, 'One card per line: front ', h('code', {}, SEPARATOR), ' back, or two columns copied from a spreadsheet (extra columns go on the back). Write ', h('code', {}, '\\n'), ' for a line break.'),
       area, summary,
       h('div', { class: 'row end' },
         h('button', { class: 'btn ghost', onclick: () => close(null) }, 'Cancel'), add));
@@ -306,8 +351,12 @@ function bulkDialog(lectureId) {
 function renderEditor(lectureId, cardId) {
   const lecture = store.getLecture(lectureId);
   if (!lecture) return go('#/');
+  // Cards added straight to a class sit in its hidden default lecture; send
+  // the user back to the class there, not to a lecture page they never made.
+  const home = lecture.isDefault ? `#/class/${lecture.classId}` : `#/lecture/${lectureId}`;
+  const homeName = lecture.isDefault ? store.getClass(lecture.classId)?.name ?? 'Back' : lecture.name;
   const card = cardId ? db.cards[lectureId]?.[cardId] : null;
-  if (cardId && (!card || card.deleted)) return go(`#/lecture/${lectureId}`);
+  if (cardId && (!card || card.deleted)) return go(home);
   document.title = `${card ? 'Edit' : 'New'} card – StudyCards`;
 
   const sides = {};
@@ -352,18 +401,18 @@ function renderEditor(lectureId, cardId) {
     if (andNew) {
       toast('Saved.');
       go(`#/edit/${lectureId}`);
-    } else go(`#/lecture/${lectureId}`);
+    } else go(home);
   }
 
   async function remove() {
     if (await confirmDialog('Delete this card?', 'It is removed on all your devices.')) {
       await store.deleteCard(lectureId, card.id);
-      go(`#/lecture/${lectureId}`);
+      go(home);
     }
   }
 
   main.append(
-    h('a', { class: 'back', href: `#/lecture/${lectureId}` }, `‹ ${lecture.name}`),
+    h('a', { class: 'back', href: home }, `‹ ${homeName}`),
     h('h1', {}, card ? 'Edit card' : 'New card'),
     side('front', 'Front', card?.front ?? ''),
     side('back', 'Back', card?.back ?? ''),
@@ -401,7 +450,7 @@ function renderStudy(kind, scope, id) {
   const owner = scope === 'class' ? store.getClass(id) : store.getLecture(id);
   if (!owner) return go('#/');
   const cards = scope === 'class' ? store.cardsOfClass(id) : store.cardsOf(id);
-  const backHref = scope === 'class' ? '#/' : `#/lecture/${id}`;
+  const backHref = scope === 'class' ? `#/class/${id}` : `#/lecture/${id}`;
   const today = localDay();
   document.title = `${kind === 'review' ? 'Review' : 'Cram'}: ${owner.name} – StudyCards`;
 

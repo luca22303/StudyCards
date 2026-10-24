@@ -2,7 +2,7 @@
 
 Personal flashcards for the phone and the MacBook. You can study by flipping cards or by typing your answer, with spaced repetition. Cards are synced through this GitHub repository, and the app is served by GitHub Pages.
 
-- **Classes → Lectures → Cards.** You can study one lecture, or a whole class shuffled.
+- **Classes hold cards.** You add cards straight to a class. If you want to, you can split a class into lectures and study one lecture, or the whole class shuffled.
 - **Two session types:**
   - **Review** shows cards that are due under spaced repetition, plus up to *N* new cards per day.
   - **Cram** shows every card of a lecture or class, shuffled, and never changes the schedule.
@@ -11,7 +11,7 @@ Personal flashcards for the phone and the MacBook. You can study by flipping car
   - **Type answer:** type your answer, then compare it with the back of the card.
 - After each card you rate yourself **Again / Hard / Good / Easy**. Again brings the card back at the end of the session.
 - Both sides of a card support Markdown and images. On the phone, the image button also offers the camera. Images are shrunk to at most 1600 px before upload.
-- **Paste cards:** paste one card per line in the form `front ;; back` to create many cards at once.
+- **Paste cards:** create many cards at once, one per line, either as `front ;; back` or as two columns copied from Excel, Numbers or Google Sheets. With columns, any extra column (for example an example sentence) is added to the back.
 - The app works offline and can be installed. Changes are queued on the device and synced when you are back online.
 
 ## Setup
@@ -34,7 +34,7 @@ The token is stored only in the browser on that device. **The repository is publ
   | Path | Contents |
   |---|---|
   | `data/structure.json` | classes and lectures |
-  | `data/cards/<lecture>.json` | the cards of one lecture |
+  | `data/cards/<lecture>.json` | the cards of one lecture. Cards added directly to a class go into a hidden lecture marked `isDefault` |
   | `data/reviews.json` | spaced-repetition state |
   | `data/img/` | images |
 

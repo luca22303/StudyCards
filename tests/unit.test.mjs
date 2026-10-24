@@ -125,7 +125,18 @@ test('bulk: parses lines, keeps skipped lines with reasons', () => {
     { front: 'Q4', back: 'a ;; b' },
   ]);
   assert.deepEqual(skipped.map(s => s.line), [3, 4]);
-  assert.match(skipped[0].reason, /separator/);
+  assert.match(skipped[0].reason, /tab separator/);
+});
+
+test('bulk: tab-separated spreadsheet rows, extra columns appended to the back', () => {
+  const { cards, skipped } = parseBulk('el perro\tder Hund\r\nla casa\tdas Haus\tEs una casa grande.\n\tleer\nsolo\t\t\nmit ;; semikolon\tund tab');
+  assert.deepEqual(cards, [
+    { front: 'el perro', back: 'der Hund' },
+    { front: 'la casa', back: 'das Haus\nEs una casa grande.' },
+    // ";;" wins over a tab on the same line.
+    { front: 'mit', back: 'semikolon\tund tab' },
+  ]);
+  assert.deepEqual(skipped.map(s => [s.line, s.reason]), [[3, 'front is empty'], [4, 'back is empty']]);
 });
 
 test('util: addDays crosses month and DST boundaries', () => {

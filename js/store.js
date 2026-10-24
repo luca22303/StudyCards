@@ -134,8 +134,37 @@ export function classes() {
   return live(db.structure.classes).sort(byOrder);
 }
 
+// Lectures are optional sections. Cards added straight to a class live in a
+// hidden lecture flagged `isDefault`, so the file layout and sync stay
+// one-file-per-lecture. Two devices can each create one before syncing; that
+// is harmless, since every default lecture of a class counts as "the class".
+function allLecturesOf(classId) {
+  return live(db.structure.lectures).filter(l => l.classId === classId);
+}
+
+// The visible lectures (sections) of a class.
 export function lecturesOf(classId) {
-  return live(db.structure.lectures).filter(l => l.classId === classId).sort(byOrder);
+  return allLecturesOf(classId).filter(l => !l.isDefault).sort(byOrder);
+}
+
+function defaultLecturesOf(classId) {
+  return allLecturesOf(classId).filter(l => l.isDefault).sort((a, b) => a.createdAt - b.createdAt);
+}
+
+// Where a card added directly to the class goes; created on first use.
+export async function ensureDefaultLecture(classId) {
+  const existing = defaultLecturesOf(classId)[0];
+  if (existing) return existing.id;
+  const now = Date.now();
+  const id = newId();
+  db.structure.lectures[id] = { id, classId, name: '', isDefault: true, order: 0, createdAt: now, updatedAt: now };
+  await commitStructure();
+  return id;
+}
+
+// Cards that belong to the class itself rather than to one of its lectures.
+export function directCardsOf(classId) {
+  return defaultLecturesOf(classId).flatMap(l => cardsOf(l.id));
 }
 
 export function getClass(id) {
@@ -153,7 +182,7 @@ export function cardsOf(lectureId) {
 }
 
 export function cardsOfClass(classId) {
-  return lecturesOf(classId).flatMap(l => cardsOf(l.id));
+  return allLecturesOf(classId).flatMap(l => cardsOf(l.id));
 }
 
 export function findCard(cardId) {
@@ -221,7 +250,7 @@ export async function deleteLecture(lectureId) {
 
 export async function deleteClass(classId) {
   const now = Date.now();
-  for (const l of lecturesOf(classId)) {
+  for (const l of allLecturesOf(classId)) {
     db.structure.lectures[l.id] = { ...l, deleted: true, updatedAt: now };
     await tombstoneCards(l.id, now);
   }

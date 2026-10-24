@@ -4,7 +4,7 @@
 // Cards and images are not cached here; they live in IndexedDB, and GitHub
 // API calls always go to the network.
 
-const VERSION = 'v3';
+const VERSION = 'v4';
 const CACHE = `studycards-${VERSION}`;
 const SHELL = [
   './',
